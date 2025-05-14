@@ -1,0 +1,56 @@
+package com.example.vulnerableapp;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class UserController {
+    private static final Logger logger = Logger.getLogger(UserController.class.getName());
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/userdb";
+    private static final String DB_USER = "admin";
+    private static final String DB_PASSWORD = "password123";  // Hardcoded credentials vulnerability
+    
+    public void getUserProfile(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            // Vulnerability #1: SQL Injection
+            String userId = request.getParameter("id");
+            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            Statement stmt = conn.createStatement();
+            String query = "SELECT * FROM users WHERE id = " + userId;  // SQL Injection vulnerability
+            stmt.executeQuery(query);
+            
+            // Vulnerability #2: No resource closing
+            // Missing conn.close() and stmt.close()
+            
+        } catch (Exception e) {
+            // Vulnerability #3: Sensitive error disclosure
+            e.printStackTrace();
+            logger.severe("Error: " + e.getMessage());
+        }
+    }
+    
+    public void executeCommand(HttpServletRequest request) {
+        try {
+            // Vulnerability #4: Command Injection
+            String command = request.getParameter("command");
+            Runtime.getRuntime().exec("cmd.exe /c " + command);  // Command injection vulnerability
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public String encrypt(String password) {
+        // Vulnerability #5: Weak encryption
+        return Base64.getEncoder().encodeToString(password.getBytes());  // Not real encryption
+    }
+    
+    public boolean authenticate(HttpServletRequest request) {
+        // Vulnerability #6: Weak authentication
+        String sessionId = request.getParameter("sessionId");
+        return sessionId != null && sessionId.length() > 0;  // Overly simple validation
+    }
+}
